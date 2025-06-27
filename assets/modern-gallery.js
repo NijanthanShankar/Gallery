@@ -472,3 +472,427 @@ jQuery(document).ready(function($) {
     
     console.log('Modern Gallery initialized successfully!');
 });
+
+ // Register GSAP plugins
+        gsap.registerPlugin(ScrollTrigger, TextPlugin);
+
+        class ModernGallery {
+            constructor() {
+                this.currentIndex = 0;
+                this.galleryItems = document.querySelectorAll('.gallery-item');
+                this.totalItems = this.galleryItems.length;
+                this.isAnimating = false;
+                this.autoPlayInterval = null;
+                
+                this.init();
+            }
+
+            init() {
+                this.setupInitialStates();
+                this.createFloatingElements();
+                this.bindEvents();
+                this.startAutoPlay();
+                this.hideLoading();
+                this.animateIn();
+            }
+
+            setupInitialStates() {
+                // Hide all items except first
+                this.galleryItems.forEach((item, index) => {
+                    if (index === 0) {
+                        gsap.set(item, { opacity: 1, scale: 1 });
+                    } else {
+                        gsap.set(item, { opacity: 0, scale: 0.8 });
+                    }
+                });
+
+                // Set up ScrollTrigger for each item
+                this.galleryItems.forEach((item, index) => {
+                    ScrollTrigger.create({
+                        trigger: item,
+                        start: "top 80%",
+                        end: "bottom 20%",
+                        onEnter: () => this.animateItemIn(item),
+                        onLeave: () => this.animateItemOut(item),
+                        onEnterBack: () => this.animateItemIn(item),
+                        onLeaveBack: () => this.animateItemOut(item)
+                    });
+                });
+            }
+
+            hideLoading() {
+                setTimeout(() => {
+                    gsap.to('#loadingOverlay', {
+                        opacity: 0,
+                        duration: 1,
+                        onComplete: () => {
+                            document.getElementById('loadingOverlay').style.display = 'none';
+                        }
+                    });
+                }, 2000);
+            }
+
+            animateIn() {
+                const tl = gsap.timeline();
+                
+                // Animate navigation
+                tl.from('.gallery-nav', {
+                    x: (index, target) => target.classList.contains('prev') ? -100 : 100,
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power3.out",
+                    stagger: 0.2
+                });
+
+                // Animate progress bar
+                tl.from('.progress-bar', {
+                    y: -50,
+                    opacity: 0,
+                    duration: 0.8,
+                    ease: "power2.out"
+                }, "-=0.5");
+
+                // Animate first gallery item
+                this.animateItemIn(this.galleryItems[0]);
+            }
+
+            animateItemIn(item) {
+                const image = item.querySelector('.gallery-image');
+                const title = item.querySelector('.gallery-title');
+                const subtitle = item.querySelector('.gallery-subtitle');
+                const description = item.querySelector('.gallery-description');
+
+                const tl = gsap.timeline();
+
+                // Image animation
+                tl.fromTo(image, 
+                    { scale: 1.3, rotation: 5 },
+                    { scale: 1.1, rotation: 0, duration: 2, ease: "power2.out" }
+                );
+
+                // Content animations
+                tl.fromTo(title,
+                    { y: 100, opacity: 0, rotationX: 90 },
+                    { y: 0, opacity: 1, rotationX: 0, duration: 1.2, ease: "power3.out" },
+                    "-=1.5"
+                );
+
+                tl.fromTo(subtitle,
+                    { y: 50, opacity: 0 },
+                    { y: 0, opacity: 1, duration: 1, ease: "power2.out" },
+                    "-=0.8"
+                );
+
+                tl.fromTo(description,
+                    { y: 30, opacity: 0 },
+                    { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" },
+                    "-=0.6"
+                );
+
+                // Add typing effect to title
+                gsap.to(title, {
+                    duration: 2,
+                    text: title.textContent,
+                    ease: "none",
+                    delay: 0.5
+                });
+
+                // Particle burst effect
+                this.createParticleBurst(item);
+            }
+
+            animateItemOut(item) {
+                const tl = gsap.timeline();
+                
+                tl.to(item.querySelector('.gallery-content'), {
+                    y: -50,
+                    opacity: 0,
+                    duration: 0.5,
+                    ease: "power2.in"
+                });
+            }
+
+            createParticleBurst(container) {
+                const particleCount = 20;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    container.appendChild(particle);
+
+                    gsap.set(particle, {
+                        x: window.innerWidth / 2,
+                        y: window.innerHeight / 2,
+                        opacity: 1
+                    });
+
+                    gsap.to(particle, {
+                        x: gsap.utils.random(-200, 200),
+                        y: gsap.utils.random(-200, 200),
+                        opacity: 0,
+                        duration: gsap.utils.random(1, 3),
+                        ease: "power2.out",
+                        onComplete: () => particle.remove()
+                    });
+                }
+            }
+
+            createFloatingElements() {
+                const shapes = ['floating-circle', 'floating-square', 'floating-triangle'];
+                
+                for (let i = 0; i < 15; i++) {
+                    const element = document.createElement('div');
+                    element.className = `floating-element ${shapes[Math.floor(Math.random() * shapes.length)]}`;
+                    document.body.appendChild(element);
+
+                    gsap.set(element, {
+                        x: gsap.utils.random(0, window.innerWidth),
+                        y: gsap.utils.random(0, window.innerHeight),
+                        opacity: gsap.utils.random(0.1, 0.5)
+                    });
+
+                    // Animate floating motion
+                    gsap.to(element, {
+                        y: "+=50",
+                        duration: gsap.utils.random(3, 6),
+                        yoyo: true,
+                        repeat: -1,
+                        ease: "power1.inOut"
+                    });
+
+                    gsap.to(element, {
+                        x: "+=30",
+                        duration: gsap.utils.random(4, 8),
+                        yoyo: true,
+                        repeat: -1,
+                        ease: "power1.inOut"
+                    });
+                }
+            }
+
+            nextImage() {
+                if (this.isAnimating) return;
+                
+                this.isAnimating = true;
+                const currentItem = this.galleryItems[this.currentIndex];
+                this.currentIndex = (this.currentIndex + 1) % this.totalItems;
+                const nextItem = this.galleryItems[this.currentIndex];
+
+                this.transitionToImage(currentItem, nextItem, 'next');
+                this.updateProgress();
+            }
+
+            prevImage() {
+                if (this.isAnimating) return;
+                
+                this.isAnimating = true;
+                const currentItem = this.galleryItems[this.currentIndex];
+                this.currentIndex = (this.currentIndex - 1 + this.totalItems) % this.totalItems;
+                const prevItem = this.galleryItems[this.currentIndex];
+
+                this.transitionToImage(currentItem, prevItem, 'prev');
+                this.updateProgress();
+            }
+
+            transitionToImage(currentItem, nextItem, direction) {
+                const tl = gsap.timeline({
+                    onComplete: () => {
+                        this.isAnimating = false;
+                    }
+                });
+
+                // Exit animation for current item
+                tl.to(currentItem, {
+                    x: direction === 'next' ? -window.innerWidth : window.innerWidth,
+                    opacity: 0,
+                    duration: 0.8,
+                    ease: "power2.inOut"
+                });
+
+                // Enter animation for next item
+                tl.fromTo(nextItem,
+                    {
+                        x: direction === 'next' ? window.innerWidth : -window.innerWidth,
+                        opacity: 0
+                    },
+                    {
+                        x: 0,
+                        opacity: 1,
+                        duration: 0.8,
+                        ease: "power2.inOut"
+                    },
+                    "-=0.4"
+                );
+
+                // Reset current item position
+                tl.set(currentItem, { x: 0 });
+
+                // Animate new content
+                tl.add(() => this.animateItemIn(nextItem), "-=0.5");
+            }
+
+            updateProgress() {
+                const progress = ((this.currentIndex + 1) / this.totalItems) * 100;
+                gsap.to('#progressFill', {
+                    width: `${progress}%`,
+                    duration: 0.5,
+                    ease: "power2.out"
+                });
+            }
+
+            openLightbox(imageSrc) {
+                const lightbox = document.getElementById('lightbox');
+                const lightboxImage = document.getElementById('lightboxImage');
+                
+                lightboxImage.src = imageSrc;
+                lightbox.classList.add('active');
+                
+                gsap.fromTo(lightbox, 
+                    { opacity: 0 },
+                    { opacity: 1, duration: 0.3 }
+                );
+                
+                gsap.fromTo(lightboxImage,
+                    { scale: 0.8, opacity: 0 },
+                    { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1.7)" }
+                );
+            }
+
+            closeLightbox() {
+                const lightbox = document.getElementById('lightbox');
+                
+                gsap.to(lightbox, {
+                    opacity: 0,
+                    duration: 0.3,
+                    onComplete: () => {
+                        lightbox.classList.remove('active');
+                    }
+                });
+            }
+
+            startAutoPlay() {
+                this.autoPlayInterval = setInterval(() => {
+                    this.nextImage();
+                }, 5000);
+            }
+
+            stopAutoPlay() {
+                clearInterval(this.autoPlayInterval);
+            }
+
+            bindEvents() {
+                // Navigation buttons
+                document.getElementById('prevBtn').addEventListener('click', () => {
+                    this.stopAutoPlay();
+                    this.prevImage();
+                    this.startAutoPlay();
+                });
+
+                document.getElementById('nextBtn').addEventListener('click', () => {
+                    this.stopAutoPlay();
+                    this.nextImage();
+                    this.startAutoPlay();
+                });
+
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') {
+                        this.stopAutoPlay();
+                        this.prevImage();
+                        this.startAutoPlay();
+                    } else if (e.key === 'ArrowRight') {
+                        this.stopAutoPlay();
+                        this.nextImage();
+                        this.startAutoPlay();
+                    } else if (e.key === 'Escape') {
+                        this.closeLightbox();
+                    }
+                });
+
+                // Image click for lightbox
+                this.galleryItems.forEach(item => {
+                    const image = item.querySelector('.gallery-image');
+                    image.addEventListener('click', () => {
+                        this.openLightbox(image.src);
+                    });
+                });
+
+                // Lightbox close
+                document.getElementById('lightboxClose').addEventListener('click', () => {
+                    this.closeLightbox();
+                });
+
+                document.getElementById('lightbox').addEventListener('click', (e) => {
+                    if (e.target.id === 'lightbox') {
+                        this.closeLightbox();
+                    }
+                });
+
+                // Touch/swipe support
+                let startX = 0;
+                let startY = 0;
+
+                document.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                });
+
+                document.addEventListener('touchend', (e) => {
+                    const endX = e.changedTouches[0].clientX;
+                    const endY = e.changedTouches[0].clientY;
+                    const diffX = startX - endX;
+                    const diffY = startY - endY;
+
+                    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                        this.stopAutoPlay();
+                        if (diffX > 0) {
+                            this.nextImage();
+                        } else {
+                            this.prevImage();
+                        }
+                        this.startAutoPlay();
+                    }
+                });
+
+                // Pause on hover
+                document.getElementById('galleryContainer').addEventListener('mouseenter', () => {
+                    this.stopAutoPlay();
+                });
+
+                document.getElementById('galleryContainer').addEventListener('mouseleave', () => {
+                    this.startAutoPlay();
+                });
+            }
+        }
+
+        // Initialize gallery when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new ModernGallery();
+        });
+
+        // Mouse follower effect
+        document.addEventListener('mousemove', (e) => {
+            const cursor = document.querySelector('.cursor');
+            if (!cursor) {
+                const newCursor = document.createElement('div');
+                newCursor.className = 'cursor';
+                newCursor.style.cssText = `
+                    position: fixed;
+                    width: 20px;
+                    height: 20px;
+                    background: rgba(255, 255, 255, 0.5);
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    mix-blend-mode: difference;
+                    transition: transform 0.1s ease;
+                `;
+                document.body.appendChild(newCursor);
+            }
+            
+            gsap.to('.cursor', {
+                x: e.clientX - 10,
+                y: e.clientY - 10,
+                duration: 0.1
+            });
+        });

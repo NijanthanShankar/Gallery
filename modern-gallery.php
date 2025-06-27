@@ -64,7 +64,7 @@ class ModernGSAPGallery {
         $gallery_id = 'gallery-' . wp_rand(1000, 9999);
         
         ob_start();
-        include MODERN_GALLERY_PLUGIN_PATH . 'templates/gallery-template.php';
+        include MODERN_GALLERY_PLUGIN_PATH . 'templates/template.php';
         return ob_get_clean();
     }
     

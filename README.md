@@ -1,2 +1,2 @@
 # Gallery
-Gallery with animation 
+Modern Gallery with animation 
